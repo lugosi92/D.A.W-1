@@ -1,0 +1,11 @@
+CREATE FUNCTION `mayorQue` (n1 smallint, n2 smallint)
+RETURNS SMALLINT
+DETERMINISTIC
+BEGIN
+	if ni>n2 THEN
+	return n1;
+	ELSE 
+    RETURN n2;
+	END IF;
+RETURN 1;
+END

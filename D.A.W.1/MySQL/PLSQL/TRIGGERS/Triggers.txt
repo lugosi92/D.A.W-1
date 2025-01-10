@@ -1,0 +1,144 @@
+-- TRIGGERS
+-- Se requieren super privilegios
+-- Se usan UPDATE DELETE INSERT 
+-- Datos unicos
+
+-- SINTAXIS
+CREATE [definer ={usuario} | CURRENT_USER}]
+TRIGGER nombre_trigger
+{BEFORE | AFTER} -- Parte obligatoria
+{INSERT | UPDATE | DELETE} -- Parte obligatoria
+ON nombre_tabla 
+COMMENT ''
+BEGIN
+	cuerpo del TRIGGER
+END
+
+-- Borrar
+DROP TRIGGER [if exists] nombre_trigger;
+--Ver TRIGGER
+SHOW TRIGGERS;
+
+-- Identificadores que son NEW y OLD
+-- old valores anteoriores a la actualizacion
+-- new valores despues de la actualizacion
+-- UPDATE puede ser NEW o OLD
+-- INSERT siempre es NEW 
+-- DELETE siempre es OLD
+
+-- EJEMPLO
+
+CREATE TABLE alumno(nombre varchar(150), age INT );
+
+delimiter //
+CREATE TRIGGER chequearEdad 
+BEFORE 
+INSERT 
+ON alumno 
+FOR EACH ROW 
+	IF new.age <0 THEN 
+		SET NEW.AGE = 0; 
+	end if;
+	
+
+insert into alumno VALUES('Javier G', 15), ('Juan', -15), ('Sara', 150);
+//
+
+SELECT * FROM alumnos;
+//
+
++----------+------+
+| nombre   | age  |
++----------+------+
+| Javier G |   15 |
+| Juan     |    0 |
+| Sara     |  150 |
++----------+------+
+
+
+-- excepciones SIGNAL 
+DECLARE no_existe_tabla CONDITION FOR 1051; -- MYSQL
+DECLARE no_existe_tabla CONDITION FOR SQLSTATE '45S02'; -- Cadena de 5 digitos(SQLState code) ANSI SQL Y ODBC
+SIGNAL SQLSTATE '45S02';
+SIGNAL no_existe_tabla
+	SET MESSAGE_TEXT='La tabla no existe',
+	MYSQL_ERRNO=1051;
+
+
+
+
+
+
+CREATE TABLE empleados(
+codigo int(4) not null primary key,
+nombre varchar(15) not null,
+apellido1 varchar(15) not null,
+apellido2 varchar(15),
+salario FLOAT(8.2),
+dni varchar(9)
+);
+
+
+DELIMITER //
+CREATE TRIGGER datosEmpleados
+BEFORE INSERT ON empleados FOR EACH ROW
+BEGIN
+IF new.salario<0 THEN
+signal sqlstate '45000'
+SET message_text='El salario no puede ser negativo',
+MYSQL_ERRNO=1051;
+END IF;
+END//
+DELIMITER ;
+
+INSERT INTO empleados values(1,'Juan','Torres','','-15000','00000000A');
+
+
+CREATE TABLE historicoEmpleados(
+id int(4) not null primary key,
+nombre varchar(15) not null,
+apellidos varchar(15) not null,
+dni varchar(9),
+fechaActual date NOT NULL
+);
+
+
+DELIMITER //
+CREATE TRIGGER añadirHistorico
+AFTER INSERT ON empleados for each row
+BEGIN
+INSERT INTO historicoEmpleados VALUES(new.codigo,new.nombre,concat(new.apellido1," ",new.apellido2),new.dni,now())
+
+
+
+
+END //
+DELIMITER ;
+
+
+INSERT INTO empleados values(1,'Juan','Torres','','-15000','00000000A');
+select * from empleados;
+select * from historicoEmpleados;
+INSERT INTO empleados values(1,'Juan','Torres','Sanchez','45000','00000000A');
+select * from empleados;
+select * from historicoEmpleados;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
